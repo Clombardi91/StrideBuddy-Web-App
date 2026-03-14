@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   CSS Custom Properties
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --font-display: var(--font-display, 'Caveat', cursive);
+  --font-body:    var(--font-body, 'DM Sans', sans-serif);
+
+  /* Warm palette */
+  --cream:      #FDFAF4;
+  --cream-100:  #FAF4E6;
+  --cream-200:  #F5E8CC;
+  --terra:      #D4623A;
+  --terra-light:#E8845A;
+  --terra-dark: #B84E28;
+  --ink:        #1A0F08;
+  --ink-mid:    #6B4D38;
+  --sage:       #5A9068;
+
+  /* Subtle noise texture via SVG data URI */
+  --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Base reset
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+/* Remove default audio element styling */
+audio {
+  width: 100%;
+  accent-color: var(--terra);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Typography utilities
+   ───────────────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Noise texture overlay (applied to page backgrounds)
+   ───────────────────────────────────────────────────────────── */
+.noise-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--noise);
+  background-size: 256px 256px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.noise-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Page transitions
+   ───────────────────────────────────────────────────────────── */
+.page-enter {
+  animation: fadeUp 0.45s ease-out both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Recording pulse ring
+   ───────────────────────────────────────────────────────────── */
+@keyframes pulseRing {
+  0%   { transform: scale(1);    opacity: 0.6; }
+  70%  { transform: scale(1.8);  opacity: 0; }
+  100% { transform: scale(1.8);  opacity: 0; }
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--terra);
+  animation: pulseRing 1.5s ease-out infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Waveform bars (idle / static state)
+   ───────────────────────────────────────────────────────────── */
+.wave-bar {
+  display: inline-block;
+  width: 3px;
+  border-radius: 2px;
+  background-color: var(--terra);
+  animation: waveBar 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes waveBar {
+  from { transform: scaleY(0.15); }
+  to   { transform: scaleY(1); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Custom scrollbar (subtle, warm)
+   ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream-100); }
+::-webkit-scrollbar-thumb { background: #CEAD96; border-radius: 3px; }
+
+/* ─────────────────────────────────────────────────────────────
+   Focus styles
+   ───────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--terra);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Textarea / input reset
+   ───────────────────────────────────────────────────────────── */
+textarea, input {
+  font-family: var(--font-body);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+textarea:focus, input:focus {
+  outline: none;
+}
