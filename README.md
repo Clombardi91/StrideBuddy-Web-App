@@ -1,8 +1,8 @@
-# My Stride Buddy — Invite Web App
+# My Stride Buddy - Invite Web App
 
 The supporter-facing Next.js web app. Supporters open an invite link
 (no account needed), record a voice message or type one that gets
-converted to speech, and it's stored in Supabase — ready to play
+converted to speech, and it's stored in Supabase - ready to play
 during the runner's next workout.
 
 ---
