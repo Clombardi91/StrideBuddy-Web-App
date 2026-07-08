@@ -1,5 +1,3 @@
-Replace stride-web/app/api/feedback/route.ts with:
-
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
