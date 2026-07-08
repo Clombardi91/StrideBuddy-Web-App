@@ -17,7 +17,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'My Stride Buddy — Send Encouragement',
+  title: 'Stride Buddy',
   description: 'Record a voice message to cheer on your runner during their workout.',
   openGraph: {
     title: 'Someone wants your encouragement!',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.png',
   },
 };
 

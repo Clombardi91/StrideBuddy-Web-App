@@ -21,7 +21,11 @@ type MicPermissionState =
   | 'prompt'
   | 'unsupported';
 
-export function RecordPage({ token, sessionId, supporterName }: Props) {
+export function RecordPage({
+  token,
+  sessionId,
+  supporterName,
+}: Props) {
   const router = useRouter();
   const recorder = useAudioRecorder();
 
@@ -35,7 +39,11 @@ export function RecordPage({ token, sessionId, supporterName }: Props) {
     (recorder.durationSeconds / MAX_SECONDS) * 100,
     100,
   );
-  const remainingSeconds = MAX_SECONDS - recorder.durationSeconds;
+
+  const remainingSeconds = Math.max(
+    MAX_SECONDS - recorder.durationSeconds,
+    0,
+  );
 
   const handleStartRecording = async () => {
     setUploadError(null);
@@ -91,7 +99,9 @@ export function RecordPage({ token, sessionId, supporterName }: Props) {
       setDidSucceed(true);
     } catch (err) {
       setUploadError(
-        err instanceof Error ? err.message : 'Upload failed. Please try again.',
+        err instanceof Error
+          ? err.message
+          : 'Upload failed. Please try again.',
       );
     } finally {
       setIsUploading(false);
@@ -103,264 +113,389 @@ export function RecordPage({ token, sessionId, supporterName }: Props) {
   }
 
   return (
-    <main className="noise-bg min-h-dvh bg-warm-gradient">
-      <div className="page-enter relative z-10 flex flex-col min-h-dvh px-5 py-8">
+    <main className="noise-bg min-h-dvh bg-warm-gradient px-5 py-8 md:py-12">
+      <section className="page-enter mx-auto w-full max-w-md">
         <button
+          type="button"
           onClick={() => router.back()}
-          className="self-start text-ink-400 hover:text-ink-700 text-sm font-medium flex items-center gap-1.5 transition-colors mb-8"
+          className="mb-6 flex items-center gap-2 text-sm font-medium text-ink-400 transition-colors hover:text-ink-900"
         >
-          <span className="text-base">←</span> Back
+          <span aria-hidden>←</span>
+          Back
         </button>
 
-        <div className="flex-1 flex flex-col items-center max-w-sm mx-auto w-full gap-8">
-          <div className="text-center">
-            <h1 className="font-display text-4xl text-ink-900 mb-2">
+        <div className="rounded-[2rem] border border-white/70 bg-white/85 px-6 py-8 shadow-2xl shadow-black/5 backdrop-blur md:px-8">
+          <header className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
+              Stride Buddy
+            </p>
+
+            <h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-ink-900">
               Record your message
             </h1>
-            <p className="text-ink-400 text-sm">
-              Hi{' '}
-              <span className="font-semibold text-terra-500">
+
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-ink-500">
+              Recording as{' '}
+              <span className="font-semibold text-ink-900">
                 {supporterName}
               </span>
-              ! Up to {MAX_SECONDS} seconds · Speak clearly 🗣️
+              . You have up to {MAX_SECONDS} seconds.
             </p>
-          </div>
+          </header>
 
-          <div className="w-full">
-            <div
-              className={[
-                'w-full rounded-4xl border-2 transition-all duration-300',
-                'flex flex-col items-center justify-center',
-                'bg-white/60 backdrop-blur-sm',
-                recorder.state === 'recording'
-                  ? 'border-terra-400 shadow-warm-lg min-h-[160px] py-6'
-                  : 'border-cream-200 shadow-warm min-h-[140px] py-6',
-              ].join(' ')}
-            >
-              {micPermission === 'denied' && (
-                <div className="flex flex-col items-center gap-3 px-5 text-center">
-                  <div className="text-4xl">🚫</div>
-                  <p className="text-terra-700 text-sm font-medium">
-                    Microphone access denied. Please allow it in your browser
-                    settings and try again.
-                  </p>
-                </div>
+          <div
+            className={[
+              'mt-7 flex min-h-[220px] w-full flex-col items-center justify-center',
+              'rounded-[1.75rem] border bg-white/80 px-5 py-7',
+              'transition-all duration-300',
+              recorder.state === 'recording'
+                ? 'border-blue-300 shadow-lg shadow-blue-600/10'
+                : 'border-ink-100 shadow-sm',
+            ].join(' ')}
+          >
+            {micPermission === 'denied' && (
+              <StatusMessage
+                icon={<MicOffIcon />}
+                title="Microphone access is blocked"
+                description="Allow microphone access in your browser settings, then try again."
+              />
+            )}
+
+            {micPermission === 'unsupported' && (
+              <StatusMessage
+                icon={<MicOffIcon />}
+                title="Recording is not supported"
+                description="This browser does not support microphone recording. Try opening the link in a current version of Chrome, Safari, or Edge."
+              />
+            )}
+
+            {micPermission === 'prompt' &&
+              recorder.state !== 'recording' &&
+              recorder.state !== 'stopped' && (
+                <StatusMessage
+                  icon={<MicrophoneIcon />}
+                  title="Ready to record"
+                  description="Allow microphone access to begin recording your message."
+                />
               )}
 
-              {micPermission === 'unsupported' && (
-                <div className="flex flex-col items-center gap-3 px-5 text-center">
-                  <div className="text-4xl">🤷</div>
-                  <p className="text-terra-700 text-sm font-medium">
-                    Your browser does not support microphone recording.
-                  </p>
-                </div>
+            {micPermission === 'granted' &&
+              recorder.state === 'idle' && (
+                <StatusMessage
+                  icon={<MicrophoneIcon />}
+                  title="Your microphone is ready"
+                  description="Select Start Recording when you're ready to begin."
+                />
               )}
 
-              {micPermission === 'prompt' &&
-                recorder.state !== 'recording' &&
-                recorder.state !== 'stopped' && (
-                  <div className="flex flex-col items-center gap-3 px-5 text-center">
-                    <div className="text-5xl">🎙️</div>
-                    <p className="text-ink-400 text-sm">
-                      Tap below to enable your microphone and start recording.
-                    </p>
+            {recorder.state === 'requesting' && (
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <SpinnerIcon className="h-7 w-7" />
+                </div>
+
+                <div>
+                  <p className="text-base font-semibold text-ink-900">
+                    Connecting to your microphone
+                  </p>
+                  <p className="mt-1 text-sm text-ink-400">
+                    This should only take a moment.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {micPermission === 'granted' &&
+              recorder.state === 'recording' && (
+                <div className="flex w-full flex-col items-center gap-5">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-600" />
+                    </span>
+
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
+                      Recording
+                    </span>
                   </div>
-                )}
 
-              {micPermission === 'granted' && recorder.state === 'idle' && (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="text-5xl">🎙️</div>
-                  <p className="text-ink-300 text-sm font-medium">
-                    Tap record to begin
-                  </p>
-                </div>
-              )}
-
-              {recorder.state === 'requesting' && (
-                <div className="flex flex-col items-center gap-3 animate-pulse-slow">
-                  <div className="text-4xl">🎤</div>
-                  <p className="text-ink-400 text-sm">
-                    Accessing microphone…
-                  </p>
-                </div>
-              )}
-
-              {micPermission === 'granted' &&
-                recorder.state === 'recording' && (
-                  <div className="w-full flex flex-col items-center gap-4 px-6">
+                  <div className="flex h-16 w-full items-center justify-center overflow-hidden">
                     {recorder.analyserNode ? (
                       <WaveformVisualizer
                         analyserNode={recorder.analyserNode}
-                        color="#D4623A"
-                        height={60}
+                        color="#2563EB"
+                        height={64}
                       />
                     ) : (
                       <IdleWaveform />
                     )}
-
-                    <div className="flex items-center gap-3">
-                      <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-terra-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-terra-500" />
-                      </span>
-                      <span className="font-display text-3xl text-ink-900 tabular-nums">
-                        {recorder.durationSeconds}s
-                      </span>
-                      <span className="text-ink-300 text-sm">
-                        / {MAX_SECONDS}s
-                      </span>
-                    </div>
-
-                    <div className="w-full h-1.5 bg-cream-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-terra-500 rounded-full transition-all duration-1000"
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {remainingSeconds <= 10 && (
-                      <p className="text-terra-600 text-xs font-medium animate-pulse">
-                        {remainingSeconds}s remaining
-                      </p>
-                    )}
                   </div>
-                )}
 
-              {micPermission === 'granted' &&
-                recorder.state === 'stopped' &&
-                recorder.audioUrl && (
-                  <div className="w-full flex flex-col gap-3 px-5">
-                    <p className="text-ink-500 text-xs font-medium text-center">
-                      Recorded · {recorder.durationSeconds}s
-                    </p>
-                    <audio
-                      src={recorder.audioUrl}
-                      controls
-                      className="w-full rounded-xl"
-                      style={{ colorScheme: 'light', accentColor: '#D4623A' }}
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display text-4xl font-semibold tabular-nums text-ink-900">
+                      {formatTime(recorder.durationSeconds)}
+                    </span>
+
+                    <span className="text-sm text-ink-300">
+                      / {formatTime(MAX_SECONDS)}
+                    </span>
+                  </div>
+
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
+                    <div
+                      className="h-full rounded-full bg-blue-600 transition-all duration-1000"
+                      style={{ width: `${progressPct}%` }}
                     />
                   </div>
-                )}
 
-              {recorder.state === 'error' && (
-                <div className="flex flex-col items-center gap-2 px-5 text-center">
-                  <span className="text-3xl">😕</span>
-                  <p className="text-terra-600 text-sm font-medium">
-                    {recorder.error}
-                  </p>
+                  {remainingSeconds <= 10 && (
+                    <p className="text-xs font-semibold text-blue-600">
+                      {remainingSeconds} seconds remaining
+                    </p>
+                  )}
                 </div>
               )}
-            </div>
+
+            {micPermission === 'granted' &&
+              recorder.state === 'stopped' &&
+              recorder.audioUrl && (
+                <div className="flex w-full flex-col items-center gap-5">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                    <CheckIcon />
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-base font-semibold text-ink-900">
+                      Your message is ready
+                    </p>
+
+                    <p className="mt-1 text-sm text-ink-400">
+                      Review your {recorder.durationSeconds}-second recording
+                      before sending.
+                    </p>
+                  </div>
+
+                  <audio
+                    src={recorder.audioUrl}
+                    controls
+                    className="w-full rounded-xl"
+                    style={{
+                      colorScheme: 'light',
+                      accentColor: '#2563EB',
+                    }}
+                  />
+                </div>
+              )}
+
+            {recorder.state === 'error' && (
+              <StatusMessage
+                icon={<MicOffIcon />}
+                title="Something went wrong"
+                description={
+                  recorder.error ||
+                  'We could not start the recording. Please try again.'
+                }
+              />
+            )}
           </div>
 
           {uploadError && (
-            <div className="w-full bg-terra-500/10 border border-terra-300 rounded-2xl p-4 animate-scale-in">
-              <p className="text-terra-700 text-sm font-medium text-center">
-                ⚠️ {uploadError}
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center">
+              <p className="text-sm font-medium text-red-700">
+                {uploadError}
               </p>
             </div>
           )}
 
-          <div className="w-full flex flex-col gap-3 mt-auto">
-            {(micPermission === 'prompt' || micPermission === 'denied') && (
+          <div className="mt-5 flex w-full flex-col gap-3">
+            {(micPermission === 'prompt' ||
+              micPermission === 'denied') && (
               <button
+                type="button"
                 onClick={handleRetryPermission}
-                className="w-full bg-terra-500 hover:bg-terra-600 active:scale-[0.98] text-white font-semibold rounded-3xl py-5 transition-all shadow-warm-lg text-base"
+                className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98]"
               >
                 Enable Microphone
               </button>
             )}
 
-            {(recorder.state === 'idle' || recorder.state === 'error') &&
+            {(recorder.state === 'idle' ||
+              recorder.state === 'error') &&
               micPermission === 'granted' && (
                 <button
+                  type="button"
                   onClick={handleStartRecording}
-                  className="w-full bg-terra-500 hover:bg-terra-600 active:scale-[0.98] text-white font-semibold rounded-3xl py-5 transition-all shadow-warm-lg flex items-center justify-center gap-3 text-base"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98]"
                 >
-                  <span className="relative w-3 h-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/60" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
-                  </span>
+                  <span className="h-3 w-3 rounded-full bg-white" />
                   Start Recording
                 </button>
               )}
 
-            {recorder.state === 'recording' && micPermission === 'granted' && (
-              <button
-                onClick={recorder.stop}
-                className="w-full bg-ink-800 hover:bg-ink-900 active:scale-[0.98] text-white font-semibold rounded-3xl py-5 transition-all shadow-md flex items-center justify-center gap-3 text-base"
-              >
-                <span className="w-4 h-4 rounded bg-white inline-block" />
-                Stop Recording
-              </button>
-            )}
-
-            {recorder.state === 'stopped' && micPermission === 'granted' && (
-              <>
+            {recorder.state === 'recording' &&
+              micPermission === 'granted' && (
                 <button
-                  onClick={handleSubmit}
-                  disabled={isUploading}
-                  className="w-full bg-terra-500 hover:bg-terra-600 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-3xl py-5 transition-all shadow-warm-lg text-base"
+                  type="button"
+                  onClick={recorder.stop}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-ink-900 px-5 py-4 text-base font-semibold text-white shadow-lg transition hover:opacity-90 active:scale-[0.98]"
                 >
-                  {isUploading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <SpinnerIcon />
-                      Sending message…
-                    </span>
-                  ) : (
-                    'Send Message 🚀'
-                  )}
+                  <span className="h-3.5 w-3.5 rounded-sm bg-white" />
+                  Stop Recording
                 </button>
+              )}
 
-                <button
-                  onClick={recorder.reset}
-                  disabled={isUploading}
-                  className="w-full bg-transparent border-2 border-cream-300 hover:border-cream-300 active:scale-[0.98] text-ink-500 hover:text-ink-700 font-medium rounded-3xl py-4 transition-all text-sm"
-                >
-                  Record Again
-                </button>
-              </>
-            )}
+            {recorder.state === 'stopped' &&
+              micPermission === 'granted' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isUploading}
+                    className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isUploading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <SpinnerIcon className="h-4 w-4" />
+                        Sending message…
+                      </span>
+                    ) : (
+                      'Send Message'
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={recorder.reset}
+                    disabled={isUploading}
+                    className="w-full rounded-2xl border border-ink-100 bg-white px-5 py-4 text-sm font-semibold text-ink-600 transition hover:border-blue-200 hover:text-blue-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Record Again
+                  </button>
+                </>
+              )}
           </div>
 
-          {recorder.state === 'idle' && micPermission === 'granted' && (
-            <div className="w-full bg-cream-100/80 rounded-3xl p-5 flex flex-col gap-2">
-              <p className="text-ink-500 text-xs font-semibold uppercase tracking-widest mb-1">
-                Tips for a great message
-              </p>
-              {[
-                ['🎯', 'Be specific — mention their name or goal'],
-                ['💪', 'Be enthusiastic — energy is contagious!'],
-                ['❤️', 'Keep it personal — it makes all the difference'],
-              ].map(([emoji, tip]) => (
-                <div key={tip} className="flex items-start gap-2">
-                  <span className="text-sm mt-px">{emoji}</span>
-                  <span className="text-ink-500 text-xs leading-relaxed">
-                    {tip}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          {recorder.state === 'idle' &&
+            micPermission === 'granted' && (
+              <div className="mt-6 border-t border-ink-100 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-400">
+                  A great message can be simple
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-ink-500">
+                  Mention their name, remind them what they’re working toward,
+                  or simply tell them you’re proud of them.
+                </p>
+              </div>
+            )}
+
+          <p className="mt-6 text-center text-xs text-ink-300">
+            Private message · Sent securely through Stride Buddy
+          </p>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
 
+function StatusMessage({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex flex-col items-center px-3 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+        {icon}
+      </div>
+
+      <p className="mt-4 text-base font-semibold text-ink-900">
+        {title}
+      </p>
+
+      <p className="mt-2 max-w-xs text-sm leading-6 text-ink-400">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function MicrophoneIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-8 w-8"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M6.5 11.5V12a5.5 5.5 0 0 0 11 0v-.5M12 17.5V21M9 21h6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function MicOffIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-8 w-8"
+      aria-hidden="true"
+    >
+      <path
+        d="m4 4 16 16M9 9v3a3 3 0 0 0 4.8 2.4M15 10V6a3 3 0 0 0-5.6-1.5M6.5 11.5V12a5.5 5.5 0 0 0 8.7 4.5M17.5 11.5V12c0 .8-.2 1.6-.5 2.3M12 17.5V21M9 21h6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-8 w-8"
+      aria-hidden="true"
+    >
+      <path
+        d="m7 12.5 3.2 3.2L17.5 8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function IdleWaveform() {
-  const heights = [30, 60, 45, 75, 50, 85, 40, 65, 35, 70, 55, 80, 42, 58];
+  const heights = [24, 42, 32, 52, 36, 58, 28, 46, 30, 50, 38, 56];
 
   return (
-    <div className="flex items-center gap-1 h-16">
-      {heights.map((h, i) => (
+    <div className="flex h-16 items-center gap-1">
+      {heights.map((height, index) => (
         <div
-          key={i}
-          className="wave-bar rounded-full"
+          key={index}
+          className="w-1 rounded-full bg-blue-500"
           style={{
-            height: h,
-            animationDelay: `${i * 60}ms`,
-            animationDuration: `${700 + i * 40}ms`,
+            height: `${height}px`,
+            opacity: 0.35 + index * 0.035,
           }}
         />
       ))}
@@ -368,9 +503,18 @@ function IdleWaveform() {
   );
 }
 
-function SpinnerIcon() {
+function SpinnerIcon({
+  className = 'h-4 w-4',
+}: {
+  className?: string;
+}) {
   return (
-    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+    <svg
+      className={`animate-spin ${className}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <circle
         className="opacity-25"
         cx="12"
@@ -382,8 +526,15 @@ function SpinnerIcon() {
       <path
         className="opacity-75"
         fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z"
       />
     </svg>
   );
+}
+
+function formatTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+
+  return `${minutes}:${remaining.toString().padStart(2, '0')}`;
 }

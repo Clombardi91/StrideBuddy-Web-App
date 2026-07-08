@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { SessionPublic } from '@/lib/types';
@@ -18,9 +19,11 @@ export function InviteLanding({ session, inviteToken }: Props) {
 
   const activity = ACTIVITY_LABELS[session.activity_type] ?? ACTIVITY_LABELS.run;
 
+  const athleteName = session.athlete_name || 'your athlete';
+
   const validateAndGo = (method: 'record' | 'type') => {
     if (!name.trim()) {
-      setNameError('Please enter your name first 👆');
+      setNameError('Please enter your name first.');
       inputRef.current?.focus();
       return;
     }
@@ -41,61 +44,56 @@ export function InviteLanding({ session, inviteToken }: Props) {
   };
 
   return (
-    <main className="noise-bg min-h-dvh bg-warm-gradient">
-      <div className="page-enter relative z-10 flex flex-col items-center justify-center min-h-dvh px-5 py-12">
-        <div
-          aria-hidden
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[140vw] h-48 rounded-b-[50%] bg-terra-500/5 pointer-events-none"
-        />
-
-        <div className="w-full max-w-sm flex flex-col items-center gap-8">
-          <div className="text-center flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-cream-200 border-4 border-cream-300 flex items-center justify-center shadow-warm">
-                <span className="text-5xl" role="img" aria-label={activity.verb}>
-                  {activity.emoji}
-                </span>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-terra-500 flex items-center justify-center shadow-md">
-                <span className="text-base">🎙️</span>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-ink-400 text-sm font-medium tracking-wide uppercase mb-1">
-                You've been invited to cheer on
-              </p>
-              <h1 className="font-display text-4xl text-ink-900 leading-tight px-2">
-                {session.name}
-              </h1>
-            </div>
-
-            {session.description && (
-              <p className="text-ink-500 text-sm leading-relaxed max-w-[280px]">
-                {session.description}
-              </p>
-            )}
-
-            <div className="flex items-center gap-2 bg-cream-200 rounded-2xl px-4 py-2.5 mt-1">
-              <span className="text-lg">💬</span>
-              <p className="text-ink-600 text-xs font-medium leading-tight">
-                Your message will play during their {activity.noun} to keep them going
-              </p>
-            </div>
+    <main className="noise-bg min-h-dvh bg-warm-gradient flex items-center justify-center px-5 py-12">
+      <section className="page-enter w-full max-w-md">
+        <div className="rounded-[2rem] border border-white/70 bg-white/85 px-6 py-8 text-center shadow-2xl shadow-black/5 backdrop-blur md:px-8">
+          <div className="mx-auto flex justify-center">
+            <Image
+              src="/logo/logo.png"
+              alt="Stride Buddy logo"
+              width={104}
+              height={104}
+              priority
+              className="h-24 w-24 object-contain"
+            />
           </div>
 
-          <div className="w-full flex flex-col gap-2">
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
+            Stride Buddy
+          </p>
+
+          <p className="mt-5 text-sm font-medium uppercase tracking-wide text-ink-400">
+            You’ve been invited to support
+          </p>
+
+          <h1 className="mt-1 font-display text-4xl font-semibold leading-tight text-ink-900">
+            {athleteName}
+          </h1>
+
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-ink-500">
+            Leave a voice message or typed note. They’ll hear it during their{' '}
+            {activity.noun} when they need the extra push.
+          </p>
+
+          {session.description && (
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-ink-400">
+              {session.description}
+            </p>
+          )}
+
+          <div className="mt-7 text-left">
             <label
               htmlFor="supporter-name"
-              className="text-ink-600 text-xs font-semibold tracking-widest uppercase"
+              className="text-xs font-semibold uppercase tracking-widest text-ink-600"
             >
               Your name
             </label>
+
             <input
               ref={inputRef}
               id="supporter-name"
               type="text"
-              placeholder="e.g. Mom, Coach Dave, Sarah..."
+              placeholder="e.g. Mom, Dad, John..."
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
@@ -103,68 +101,69 @@ export function InviteLanding({ session, inviteToken }: Props) {
               }}
               maxLength={40}
               className={[
-                'w-full bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-4',
-                'text-ink-900 text-base font-body placeholder-ink-200',
-                'border-2 transition-colors duration-150',
+                'mt-3 w-full rounded-2xl bg-white/90 px-4 py-4',
+                'text-base text-ink-900 placeholder-ink-200',
+                'border transition-colors duration-150 outline-none',
                 nameError
                   ? 'border-terra-500'
-                  : 'border-cream-200 focus:border-terra-400',
-                'shadow-inner-warm',
+                  : 'border-ink-100 focus:border-blue-500',
+                'shadow-sm',
               ].join(' ')}
               onKeyDown={(e) => e.key === 'Enter' && validateAndGo('record')}
               autoComplete="given-name"
               autoCapitalize="words"
             />
+
             {nameError && (
-              <p className="text-terra-600 text-xs font-medium animate-fade-up">
+              <p className="mt-2 text-xs font-medium text-terra-600">
                 {nameError}
               </p>
             )}
           </div>
 
-          <div className="w-full flex flex-col gap-3">
+          <div className="mt-6 flex flex-col gap-3">
             <button
               onClick={() => validateAndGo('record')}
-              className="group w-full bg-terra-500 hover:bg-terra-600 active:scale-[0.98] text-white font-semibold rounded-3xl py-5 px-6 transition-all duration-150 shadow-warm-lg flex items-center justify-between"
+              className="group flex w-full items-center justify-between rounded-2xl bg-blue-600 px-5 py-5 text-white shadow-lg shadow-blue-600/20 transition duration-150 hover:bg-blue-700 active:scale-[0.98]"
             >
-              <span className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center text-xl shrink-0">
-                  🎙️
+              <span className="text-left">
+                <span className="block text-base font-semibold">
+                  Record a Voice Message
                 </span>
-                <span className="text-left">
-                  <span className="block text-base font-semibold">Record a Voice Message</span>
-                  <span className="block text-xs text-white/70 font-normal">Up to 60 seconds</span>
+                <span className="mt-1 block text-xs font-normal text-white/75">
+                  Use your voice, up to 60 seconds
                 </span>
               </span>
-              <span className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all duration-150 text-xl">
+
+              <span className="text-xl text-white/70 transition group-hover:translate-x-1 group-hover:text-white">
                 →
               </span>
             </button>
 
             <button
               onClick={() => validateAndGo('type')}
-              className="group w-full bg-white/80 backdrop-blur-sm hover:bg-white active:scale-[0.98] text-ink-700 font-semibold rounded-3xl py-5 px-6 border-2 border-cream-200 hover:border-terra-300 transition-all duration-150 shadow-warm flex items-center justify-between"
+              className="group flex w-full items-center justify-between rounded-2xl border border-ink-100 bg-white/90 px-5 py-5 text-ink-900 shadow-sm transition duration-150 hover:border-blue-200 hover:bg-white active:scale-[0.98]"
             >
-              <span className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-2xl bg-cream-100 flex items-center justify-center text-xl shrink-0">
-                  ✍️
+              <span className="text-left">
+                <span className="block text-base font-semibold">
+                  Type a Message
                 </span>
-                <span className="text-left">
-                  <span className="block text-base font-semibold">Type a Message</span>
-                  <span className="block text-xs text-ink-400 font-normal">AI converts it to speech</span>
+                <span className="mt-1 block text-xs font-normal text-ink-400">
+                  We’ll convert it to speech
                 </span>
               </span>
-              <span className="text-ink-300 group-hover:text-terra-500 group-hover:translate-x-1 transition-all duration-150 text-xl">
+
+              <span className="text-xl text-ink-300 transition group-hover:translate-x-1 group-hover:text-blue-600">
                 →
               </span>
             </button>
           </div>
 
-          <p className="text-ink-200 text-xs text-center">
-            No account needed · Takes 30 seconds
+          <p className="mt-7 text-xs text-ink-300">
+            Private message · No account needed · Takes less than a minute
           </p>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

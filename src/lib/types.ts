@@ -9,6 +9,7 @@ export interface SessionPublic {
   invite_token: string;
   invite_expires_at: string | null;
   is_active: boolean;
+  athlete_name: string | null;
 }
 
 export interface UploadRecordedPayload {
@@ -52,19 +53,79 @@ export interface TTSGenerateResponse {
   estimatedDurationSeconds: number;
 }
 
-export type TTSVoice = 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+export type TTSVoice =
+  | 'alloy'
+  | 'echo'
+  | 'fable'
+  | 'onyx'
+  | 'nova'
+  | 'shimmer';
 
-export const TTS_VOICES: { id: TTSVoice; name: string; vibe: string; emoji: string }[] = [
-  { id: 'nova',    name: 'Nova',    vibe: 'Warm & uplifting',  emoji: '☀️' },
-  { id: 'shimmer', name: 'Shimmer', vibe: 'Bright & energetic', emoji: '⚡' },
-  { id: 'fable',   name: 'Fable',   vibe: 'Deep & powerful',   emoji: '🔥' },
-  { id: 'alloy',   name: 'Alloy',   vibe: 'Clear & confident', emoji: '💎' },
-  { id: 'echo',    name: 'Echo',    vibe: 'Calm & steady',     emoji: '🌊' },
-  { id: 'onyx',    name: 'Onyx',    vibe: 'Rich & motivating', emoji: '🏆' },
+export const TTS_VOICES: {
+  id: TTSVoice;
+  name: string;
+  vibe: string;
+  emoji: string;
+}[] = [
+  {
+    id: 'nova',
+    name: 'Nova',
+    vibe: 'Warm & uplifting',
+    emoji: '☀️',
+  },
+  {
+    id: 'shimmer',
+    name: 'Shimmer',
+    vibe: 'Bright & energetic',
+    emoji: '⚡',
+  },
+  {
+    id: 'fable',
+    name: 'Fable',
+    vibe: 'Deep & powerful',
+    emoji: '🔥',
+  },
+  {
+    id: 'alloy',
+    name: 'Alloy',
+    vibe: 'Clear & confident',
+    emoji: '💎',
+  },
+  {
+    id: 'echo',
+    name: 'Echo',
+    vibe: 'Calm & steady',
+    emoji: '🌊',
+  },
+  {
+    id: 'onyx',
+    name: 'Onyx',
+    vibe: 'Rich & motivating',
+    emoji: '🏆',
+  },
 ];
 
-export const ACTIVITY_LABELS: Record<ActivityType, { verb: string; emoji: string; noun: string }> = {
-  run:   { verb: 'running',  emoji: '🏃', noun: 'run'   },
-  cycle: { verb: 'cycling',  emoji: '🚴', noun: 'ride'  },
-  walk:  { verb: 'walking',  emoji: '🚶', noun: 'walk'  },
+export const ACTIVITY_LABELS: Record<
+  ActivityType,
+  {
+    verb: string;
+    emoji: string;
+    noun: string;
+  }
+> = {
+  run: {
+    verb: 'running',
+    emoji: '🏃',
+    noun: 'run',
+  },
+  cycle: {
+    verb: 'cycling',
+    emoji: '🚴',
+    noun: 'ride',
+  },
+  walk: {
+    verb: 'walking',
+    emoji: '🚶',
+    noun: 'walk',
+  },
 };

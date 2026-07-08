@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SuccessScreen } from './SuccessScreen';
 import {
@@ -16,28 +16,45 @@ interface Props {
   supporterName: string;
 }
 
-type PageState = 'compose' | 'generating' | 'preview' | 'uploading' | 'success';
+type PageState =
+  | 'compose'
+  | 'generating'
+  | 'preview'
+  | 'uploading'
+  | 'success';
 
 const MAX_CHARS = 500;
 
 const MESSAGE_STARTERS = [
-  "You've trained so hard for this — go show the world!",
-  "Every single step counts. Don't you dare give up!",
-  "You're stronger than you feel right now. Keep going!",
-  "I'm cheering for you every single mile. You've got this!",
-  'Pain is temporary, but finishing is forever. Push through!',
-  "Think of how far you've already come. Don't stop now!",
+  "You've trained so hard for this. Keep going, you've got this!",
+  "Every step is getting you closer. Keep moving forward!",
+  "You're stronger than you feel right now. Don't stop!",
+  "I'm cheering for you every step of the way!",
+  "Remember what you're working toward. Keep going!",
+  "Look how far you've already come. I'm so proud of you.",
 ];
 
-export function TTSPage({ token, sessionId, supporterName }: Props) {
+export function TTSPage({
+  token,
+  sessionId,
+  supporterName,
+}: Props) {
   const router = useRouter();
 
-  const [pageState, setPageState] = useState<PageState>('compose');
+  const [pageState, setPageState] =
+    useState<PageState>('compose');
+
   const [text, setText] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState<TTSVoice>('nova');
-  const [speed, setSpeed] = useState(1.0);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [audioBase64, setAudioBase64] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] =
+    useState<TTSVoice>('nova');
+
+  const [speed, setSpeed] = useState(1);
+  const [previewUrl, setPreviewUrl] =
+    useState<string | null>(null);
+
+  const [audioBase64, setAudioBase64] =
+    useState<string | null>(null);
+
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +63,9 @@ export function TTSPage({ token, sessionId, supporterName }: Props) {
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [previewUrl]);
 
@@ -63,7 +82,10 @@ export function TTSPage({ token, sessionId, supporterName }: Props) {
         speed,
       });
 
-      const url = base64ToAudioUrl(result.audioBase64, result.mimeType);
+      const url = base64ToAudioUrl(
+        result.audioBase64,
+        result.mimeType,
+      );
 
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -74,13 +96,21 @@ export function TTSPage({ token, sessionId, supporterName }: Props) {
       setEstimatedDuration(result.estimatedDurationSeconds);
       setPageState('preview');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate voice');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate voice preview.',
+      );
+
       setPageState('compose');
     }
   };
 
   const handleRegenerate = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
     setPreviewUrl(null);
     setAudioBase64(null);
     setPageState('compose');
@@ -105,7 +135,12 @@ export function TTSPage({ token, sessionId, supporterName }: Props) {
 
       setPageState('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed. Try again.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Upload failed. Please try again.',
+      );
+
       setPageState('preview');
     }
   };
@@ -121,246 +156,386 @@ export function TTSPage({ token, sessionId, supporterName }: Props) {
 
   const charCount = text.length;
   const isOverLimit = charCount > MAX_CHARS;
-  const charPct = Math.min((charCount / MAX_CHARS) * 100, 100);
+  const charactersRemaining = MAX_CHARS - charCount;
+
+  const selectedVoiceData = TTS_VOICES.find(
+    (voice) => voice.id === selectedVoice,
+  );
 
   return (
-    <main className="noise-bg min-h-dvh bg-warm-gradient">
-      <div className="page-enter relative z-10 flex flex-col min-h-dvh px-5 py-8">
+    <main className="noise-bg min-h-dvh bg-warm-gradient px-5 py-8 md:py-12">
+      <section className="page-enter mx-auto w-full max-w-md">
         <button
+          type="button"
           onClick={() => router.back()}
-          className="self-start text-ink-400 hover:text-ink-700 text-sm font-medium flex items-center gap-1.5 transition-colors mb-8"
+          className="mb-6 flex items-center gap-2 text-sm font-medium text-ink-400 transition-colors hover:text-ink-900"
         >
-          <span className="text-base">←</span> Back
+          <span aria-hidden="true">←</span>
+          Back
         </button>
 
-        <div className="flex-1 flex flex-col max-w-sm mx-auto w-full gap-6">
-          <div className="text-center">
-            <h1 className="font-display text-4xl text-ink-900 mb-2">
+        <div className="rounded-[2rem] border border-white/70 bg-white/85 px-6 py-8 shadow-2xl shadow-black/5 backdrop-blur md:px-8">
+          <header className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
+              Stride Buddy
+            </p>
+
+            <h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-ink-900">
               Write your message
             </h1>
-            <p className="text-ink-400 text-sm">
-              AI converts it to a voice message for{' '}
-              <span className="font-semibold text-terra-500">{supporterName}</span>
+
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-ink-500">
+              Write what you want to say. We’ll turn it into a
+              voice message for{' '}
+              <span className="font-semibold text-ink-900">
+                {supporterName}
+              </span>
+              .
             </p>
-          </div>
+          </header>
 
           {pageState === 'compose' && (
-            <div>
-              <p className="text-ink-400 text-xs font-semibold uppercase tracking-widest mb-2.5">
-                Quick starters
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {MESSAGE_STARTERS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => insertStarter(s)}
-                    className="text-xs bg-cream-100 hover:bg-cream-200 active:scale-[0.97] border border-cream-200 text-ink-500 hover:text-ink-700 rounded-full px-3 py-1.5 transition-all line-clamp-1 text-left max-w-full"
+            <>
+              <div className="mt-7">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="tts-message"
+                    className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500"
                   >
-                    {s.length > 40 ? `${s.slice(0, 40)}…` : s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+                    Your message
+                  </label>
 
-          <div className="relative">
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Write something heartfelt, funny, or wildly encouraging…"
-              disabled={pageState !== 'compose'}
-              rows={5}
-              maxLength={MAX_CHARS + 10}
-              className={[
-                'w-full bg-white/80 backdrop-blur-sm rounded-3xl px-5 py-4',
-                'text-ink-900 text-base leading-relaxed placeholder-ink-200',
-                'border-2 transition-colors duration-150 resize-none',
-                'shadow-inner-warm',
-                isOverLimit
-                  ? 'border-terra-500'
-                  : 'border-cream-200 focus:border-terra-400',
-                pageState !== 'compose' && 'opacity-60 cursor-not-allowed',
-              ].join(' ')}
-            />
-            <div className="absolute bottom-3 right-4 flex items-center gap-2">
-              <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
-                <circle cx="10" cy="10" r="8" fill="none" stroke="#E8D5C4" strokeWidth="2" />
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="8"
-                  fill="none"
-                  stroke={isOverLimit ? '#D4623A' : charPct > 80 ? '#E8845A' : '#CEAD96'}
-                  strokeWidth="2"
-                  strokeDasharray={`${2 * Math.PI * 8}`}
-                  strokeDashoffset={`${2 * Math.PI * 8 * (1 - charPct / 100)}`}
-                  strokeLinecap="round"
-                  className="transition-all duration-300"
-                />
-              </svg>
-              <span className={`text-xs tabular-nums font-medium ${isOverLimit ? 'text-terra-600' : 'text-ink-300'}`}>
-                {MAX_CHARS - charCount}
-              </span>
-            </div>
-          </div>
-
-          {pageState !== 'preview' && (
-            <div>
-              <p className="text-ink-400 text-xs font-semibold uppercase tracking-widest mb-3">
-                Choose a voice
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {TTS_VOICES.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVoice(v.id)}
-                    disabled={pageState !== 'compose'}
+                  <span
                     className={[
-                      'flex items-center gap-3 rounded-2xl px-3.5 py-3 text-left',
-                      'border-2 transition-all duration-150',
-                      selectedVoice === v.id
-                        ? 'bg-terra-500/10 border-terra-400 shadow-warm'
-                        : 'bg-white/60 border-cream-200 hover:border-cream-300',
-                      pageState !== 'compose' && 'opacity-50 cursor-not-allowed',
+                      'text-xs tabular-nums',
+                      isOverLimit
+                        ? 'font-semibold text-red-600'
+                        : 'text-ink-300',
                     ].join(' ')}
                   >
-                    <span className="text-xl">{v.emoji}</span>
-                    <span>
-                      <span className="block text-sm font-semibold text-ink-800">{v.name}</span>
-                      <span className="block text-xs text-ink-400">{v.vibe}</span>
-                    </span>
-                    {selectedVoice === v.id && (
-                      <span className="ml-auto text-terra-500 text-xs font-bold">✓</span>
-                    )}
-                  </button>
-                ))}
+                    {charactersRemaining} remaining
+                  </span>
+                </div>
+
+                <textarea
+                  ref={textareaRef}
+                  id="tts-message"
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder="Write something encouraging..."
+                  rows={6}
+                  maxLength={MAX_CHARS + 10}
+                  className={[
+                    'mt-3 w-full resize-none rounded-2xl bg-white/90 px-4 py-4',
+                    'text-base leading-7 text-ink-900 placeholder-ink-200',
+                    'border outline-none transition-colors duration-150',
+                    'shadow-sm',
+                    isOverLimit
+                      ? 'border-red-400 focus:border-red-500'
+                      : 'border-ink-100 focus:border-blue-500',
+                  ].join(' ')}
+                />
               </div>
-            </div>
+
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
+                  Need an idea?
+                </p>
+
+                <div className="mt-3 flex flex-col gap-2">
+                  {MESSAGE_STARTERS.slice(0, 3).map((starter) => (
+                    <button
+                      key={starter}
+                      type="button"
+                      onClick={() => insertStarter(starter)}
+                      className="group flex w-full items-center justify-between rounded-xl border border-ink-100 bg-white/70 px-4 py-3 text-left transition hover:border-blue-200 hover:bg-white"
+                    >
+                      <span className="pr-4 text-sm leading-5 text-ink-500 transition group-hover:text-ink-700">
+                        {starter}
+                      </span>
+
+                      <span className="shrink-0 text-ink-300 transition group-hover:text-blue-600">
+                        +
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="my-7 h-px w-full bg-ink-100" />
+
+              <div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
+                    Choose a voice
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-ink-300">
+                    Select the tone that best fits your message.
+                  </p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {TTS_VOICES.map((voice) => {
+                    const isSelected =
+                      selectedVoice === voice.id;
+
+                    return (
+                      <button
+                        key={voice.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedVoice(voice.id)
+                        }
+                        className={[
+                          'relative rounded-2xl border px-4 py-3.5 text-left',
+                          'transition-all duration-150 active:scale-[0.98]',
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50/70 shadow-sm'
+                            : 'border-ink-100 bg-white/70 hover:border-blue-200 hover:bg-white',
+                        ].join(' ')}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span
+                              className={[
+                                'block text-sm font-semibold',
+                                isSelected
+                                  ? 'text-blue-700'
+                                  : 'text-ink-900',
+                              ].join(' ')}
+                            >
+                              {voice.name}
+                            </span>
+
+                            <span className="mt-1 block text-xs leading-4 text-ink-400">
+                              {voice.vibe}
+                            </span>
+                          </div>
+
+                          <span
+                            className={[
+                              'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                              isSelected
+                                ? 'border-blue-600 bg-blue-600 text-white'
+                                : 'border-ink-100 bg-white',
+                            ].join(' ')}
+                          >
+                            {isSelected && (
+                              <CheckIcon className="h-3 w-3" />
+                            )}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-7">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
+                      Speaking speed
+                    </p>
+
+                    <p className="mt-1 text-xs text-ink-300">
+                      Adjust how quickly the message is read.
+                    </p>
+                  </div>
+
+                  <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold tabular-nums text-blue-600">
+                    {speed.toFixed(1)}×
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0.75"
+                  max="1.25"
+                  step="0.05"
+                  value={speed}
+                  onChange={(event) =>
+                    setSpeed(parseFloat(event.target.value))
+                  }
+                  aria-label="Speaking speed"
+                  className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full bg-ink-100"
+                  style={{ accentColor: '#2563EB' }}
+                />
+
+                <div className="mt-2 flex justify-between text-xs text-ink-300">
+                  <span>Slower</span>
+                  <span>Normal</span>
+                  <span>Faster</span>
+                </div>
+              </div>
+            </>
           )}
 
-          {pageState === 'compose' && (
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-ink-400 text-xs font-semibold uppercase tracking-widest">
-                  Speaking speed
-                </p>
-                <span className="text-terra-500 text-xs font-semibold tabular-nums">
-                  {speed.toFixed(1)}×
-                </span>
+          {pageState === 'generating' && (
+            <div className="mt-7 flex min-h-[280px] flex-col items-center justify-center rounded-[1.75rem] border border-blue-100 bg-blue-50/40 px-6 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
+                <GeneratingAnimation />
               </div>
-              <input
-                type="range"
-                min="0.75"
-                max="1.25"
-                step="0.05"
-                value={speed}
-                onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none bg-cream-200 cursor-pointer"
-                style={{ accentColor: '#D4623A' }}
-              />
-              <div className="flex justify-between text-ink-300 text-xs mt-1">
-                <span>Slower</span>
-                <span>Normal</span>
-                <span>Faster</span>
-              </div>
+
+              <p className="mt-5 text-base font-semibold text-ink-900">
+                Creating your voice preview
+              </p>
+
+              <p className="mt-2 max-w-xs text-sm leading-6 text-ink-400">
+                We’re turning your message into speech. This
+                should only take a moment.
+              </p>
             </div>
           )}
 
           {pageState === 'preview' && previewUrl && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl border-2 border-cream-200 p-5 flex flex-col gap-4 shadow-warm">
-              <div className="flex items-center justify-between">
-                <p className="text-ink-600 text-sm font-semibold">
-                  🎙️ Preview your message
+            <div className="mt-7">
+              <div className="text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <AudioIcon />
+                </div>
+
+                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
+                  Preview ready
                 </p>
-                <span className="text-ink-300 text-xs">~{estimatedDuration}s</span>
-              </div>
-              <audio
-                ref={audioRef}
-                src={previewUrl}
-                controls
-                className="w-full"
-                style={{ colorScheme: 'light', accentColor: '#D4623A' }}
-              />
-              <div className="bg-cream-100 rounded-2xl px-4 py-3">
-                <p className="text-ink-500 text-xs leading-relaxed italic">
-                  "{text.length > 120 ? `${text.slice(0, 120)}…` : text}"
-                </p>
-                <p className="text-ink-300 text-xs mt-1">
-                  Voice: {TTS_VOICES.find((v) => v.id === selectedVoice)?.name}
+
+                <h2 className="mt-2 font-display text-3xl font-semibold text-ink-900">
+                  Listen before you send
+                </h2>
+
+                <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-ink-400">
+                  Make sure your message sounds the way you want it to.
                 </p>
               </div>
+
+              <div className="mt-6 rounded-2xl border border-ink-100 bg-white/80 p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-ink-900">
+                      Voice preview
+                    </p>
+
+                    <p className="mt-1 text-xs text-ink-400">
+                      {selectedVoiceData?.name} ·{' '}
+                      {speed.toFixed(1)}× speed
+                    </p>
+                  </div>
+
+                  <span className="text-xs font-medium text-ink-300">
+                    ~{estimatedDuration}s
+                  </span>
+                </div>
+
+                <audio
+                  ref={audioRef}
+                  src={previewUrl}
+                  controls
+                  className="mt-4 w-full"
+                  style={{
+                    colorScheme: 'light',
+                    accentColor: '#2563EB',
+                  }}
+                />
+
+                <div className="mt-4 border-t border-ink-100 pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-300">
+                    Your message
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-ink-500">
+                    “{text}”
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {pageState === 'uploading' && (
+            <div className="mt-7 flex min-h-[280px] flex-col items-center justify-center rounded-[1.75rem] border border-blue-100 bg-blue-50/40 px-6 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
+                <SpinnerIcon className="h-7 w-7" />
+              </div>
+
+              <p className="mt-5 text-base font-semibold text-ink-900">
+                Sending your message
+              </p>
+
+              <p className="mt-2 max-w-xs text-sm leading-6 text-ink-400">
+                Your message is being securely added to their
+                workout.
+              </p>
             </div>
           )}
 
           {error && (
-            <div className="w-full bg-terra-500/10 border border-terra-300 rounded-2xl p-4 animate-scale-in">
-              <p className="text-terra-700 text-sm font-medium text-center">⚠️ {error}</p>
+            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center">
+              <p className="text-sm font-medium text-red-700">
+                {error}
+              </p>
             </div>
           )}
 
-          <div className="flex flex-col gap-3 mt-auto pb-4">
+          <div className="mt-7 flex flex-col gap-3">
             {pageState === 'compose' && (
               <button
+                type="button"
                 onClick={handleGenerate}
                 disabled={!text.trim() || isOverLimit}
-                className="w-full bg-terra-500 hover:bg-terra-600 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-3xl py-5 transition-all shadow-warm-lg text-base"
+                className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Generate Voice Preview ✨
+                Generate Voice Preview
               </button>
-            )}
-
-            {pageState === 'generating' && (
-              <div className="w-full bg-cream-100 rounded-3xl py-5 flex items-center justify-center gap-3 border-2 border-cream-200">
-                <GeneratingAnimation />
-                <span className="text-ink-500 text-sm font-medium">
-                  Generating voice…
-                </span>
-              </div>
             )}
 
             {pageState === 'preview' && (
               <>
                 <button
+                  type="button"
                   onClick={handleSubmit}
-                  className="w-full bg-terra-500 hover:bg-terra-600 active:scale-[0.98] text-white font-semibold rounded-3xl py-5 transition-all shadow-warm-lg text-base"
+                  className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98]"
                 >
-                  Send Message 🚀
+                  Send Message
                 </button>
+
                 <button
+                  type="button"
                   onClick={handleRegenerate}
-                  className="w-full bg-transparent border-2 border-cream-300 text-ink-500 hover:text-ink-700 font-medium rounded-3xl py-4 transition-all text-sm"
+                  className="w-full rounded-2xl border border-ink-100 bg-white px-5 py-4 text-sm font-semibold text-ink-600 transition hover:border-blue-200 hover:text-blue-600 active:scale-[0.98]"
                 >
-                  Edit & Regenerate
+                  Edit Message
                 </button>
               </>
             )}
-
-            {pageState === 'uploading' && (
-              <div className="w-full bg-terra-500/10 rounded-3xl py-5 flex items-center justify-center gap-3 border-2 border-terra-300">
-                <SpinnerIcon />
-                <span className="text-terra-700 text-sm font-medium">
-                  Sending your message…
-                </span>
-              </div>
-            )}
           </div>
+
+          {pageState === 'compose' && (
+            <p className="mt-6 text-center text-xs text-ink-300">
+              You’ll preview the voice before anything is sent.
+            </p>
+          )}
+
+          {pageState === 'preview' && (
+            <p className="mt-6 text-center text-xs text-ink-300">
+              Nothing is sent until you select Send Message.
+            </p>
+          )}
         </div>
-      </div>
+      </section>
     </main>
   );
 }
 
 function GeneratingAnimation() {
   return (
-    <div className="flex items-center gap-[3px] h-5">
-      {[0, 1, 2, 3, 4].map((i) => (
+    <div className="flex h-7 items-center gap-1">
+      {[0, 1, 2, 3, 4].map((index) => (
         <div
-          key={i}
-          className="w-[3px] bg-terra-400 rounded-full animate-bounce-gentle"
+          key={index}
+          className="w-1 animate-bounce-gentle rounded-full bg-blue-600"
           style={{
-            height: `${10 + i * 3}px`,
-            animationDelay: `${i * 100}ms`,
+            height: `${12 + index * 3}px`,
+            animationDelay: `${index * 100}ms`,
           }}
         />
       ))}
@@ -368,11 +543,73 @@ function GeneratingAnimation() {
   );
 }
 
-function SpinnerIcon() {
+function AudioIcon() {
   return (
-    <svg className="animate-spin h-4 w-4 text-terra-600" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-8 w-8"
+      aria-hidden="true"
+    >
+      <path
+        d="M5 9v6M9 6v12M13 4v16M17 7v10M21 10v4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon({
+  className = 'h-4 w-4',
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="m7 12.5 3.2 3.2L17.5 8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SpinnerIcon({
+  className = 'h-4 w-4',
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z"
+      />
     </svg>
   );
 }
