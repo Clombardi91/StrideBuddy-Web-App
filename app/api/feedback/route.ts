@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FEEDBACK_TO_EMAIL = process.env.FEEDBACK_TO_EMAIL;
-const FEEDBACK_FROM_EMAIL = 'Stride Buddy <feedback@send.stridebuddy.org>';
+const FEEDBACK_FROM_EMAIL = 'Stride Buddy <feedback@stridebuddy.org>';
 
 export async function POST(request: NextRequest) {
   try {
